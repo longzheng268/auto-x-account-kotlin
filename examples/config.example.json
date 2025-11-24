@@ -1,0 +1,45 @@
+{
+  "captchaMode": "AUTO",
+  "captchaTimeout": 300000,
+  "emailConfig": {
+    "provider": "GMAIL",
+    "emailAddress": "your-email@gmail.com",
+    "password": "your-app-password",
+    "enablePlusMode": true,
+    "plusSuffix": "+test",
+    "baseEmail": "",
+    "useHumanNames": true,
+    "customNames": [
+      "john", "mary", "david", "lisa", "michael", "sarah", "james", "emma",
+      "william", "olivia", "benjamin", "ava", "lucas", "mia", "henry", "charlotte"
+    ],
+    "imapHost": "imap.gmail.com",
+    "imapPort": 993,
+    "smtpHost": "smtp.gmail.com",
+    "smtpPort": 587,
+    "customApiUrl": "",
+    "customApiKey": ""
+  },
+  "proxyConfig": {
+    "systemProxyMode": "AUTO",
+    "enableBrowserProxy": false,
+    "enableEmailProxy": false,
+    "browserProxyUrl": "http://proxy-host:8080",
+    "emailProxyUrl": "http://proxy-host:8080",
+    "proxyType": "HTTP",
+    "autoDetectSystemProxy": true
+  },
+  "bitBrowserConfig": {
+    "apiUrl": "http://localhost:54345",
+    "apiPort": 54345,
+    "profileId": "your-profile-id",
+    "enabled": false
+  },
+  "requestTimeout": 30000,
+  "retryCount": 3,
+  "retryDelay": 1000,
+  "maxConcurrency": 5,
+  "taskCheckInterval": 1000,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "debugMode": false
+}

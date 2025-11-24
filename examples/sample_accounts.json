@@ -1,0 +1,42 @@
+[
+  {
+    "email": "test1@gmail.com",
+    "name": "Test User One",
+    "password": "SecurePassword123!@#",
+    "dateOfBirth": "1990-05-15",
+    "username": "testuser1",
+    "phone": "+1-555-001-0001"
+  },
+  {
+    "email": "test2@outlook.com",
+    "name": "Test User Two",
+    "password": "SecurePassword456!@#",
+    "dateOfBirth": "1991-07-20",
+    "username": "testuser2",
+    "phone": "+1-555-001-0002"
+  },
+  {
+    "email": "test3@mail.yourdomain.com",
+    "name": "Test User Three",
+    "password": "SecurePassword789!@#",
+    "dateOfBirth": "1992-03-10",
+    "username": "testuser3",
+    "phone": "+1-555-001-0003"
+  },
+  {
+    "email": "test4@gmail.com",
+    "name": "Test User Four",
+    "password": "SecurePassword001!@#",
+    "dateOfBirth": "1993-09-25",
+    "username": "testuser4",
+    "phone": "+1-555-001-0004"
+  },
+  {
+    "email": "test5@outlook.com",
+    "name": "Test User Five",
+    "password": "SecurePassword002!@#",
+    "dateOfBirth": "1994-11-30",
+    "username": "testuser5",
+    "phone": "+1-555-001-0005"
+  }
+]
