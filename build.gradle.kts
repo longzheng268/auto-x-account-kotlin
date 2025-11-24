@@ -74,3 +74,8 @@ kotlin {
         }
     }
 }
+
+// Configure the existing clean task instead of registering a new one
+tasks.named<Delete>("clean") {
+    delete(layout.buildDirectory)
+}
