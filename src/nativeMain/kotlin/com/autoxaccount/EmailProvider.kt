@@ -193,12 +193,14 @@ class BatchEmailManager(private val config: EmailProviderConfig) {
      * Create a single email account
      */
     private suspend fun createSingleEmail(index: Int = 1): Result<EmailAccount> = runCatchingResult {
-    private suspend fun createSingleEmail(): Result<EmailAccount> = runCatchingResult {
+        logInfo("创建邮箱账号 / Creating email account")
+        
         when (config.provider) {
-            EmailProvider.MAILTM -> createMailTmEmail()
-            EmailProvider.GUERRILLAMAIL -> createGuerrillaMailEmail()
-            EmailProvider.SELFHOSTED -> createSelfHostedEmail()
+            EmailProvider.MAIL_TM -> createMailTmEmail()
+            EmailProvider.GUERRILLA_MAIL -> createGuerrillaMailEmail()
+            EmailProvider.SELF_HOSTED -> createSelfHostedEmail()
             EmailProvider.CUSTOM -> createCustomEmail()
+            else -> createMailTmEmail() // Default fallback
         }
     }
 
@@ -214,7 +216,7 @@ class BatchEmailManager(private val config: EmailProviderConfig) {
         return EmailAccount(
             address = "$username@$domain",
             password = password,
-            provider = EmailProvider.MAILTM,
+            provider = EmailProvider.MAIL_TM,
             createdAt = kotlinx.datetime.Clock.System.now().toString(),
             verified = false
         )
@@ -232,7 +234,7 @@ class BatchEmailManager(private val config: EmailProviderConfig) {
         return EmailAccount(
             address = "$username@$domain",
             password = password,
-            provider = EmailProvider.GUERRILLAMAIL,
+            provider = EmailProvider.GUERRILLA_MAIL,
             createdAt = kotlinx.datetime.Clock.System.now().toString(),
             verified = false
         )
@@ -249,7 +251,7 @@ class BatchEmailManager(private val config: EmailProviderConfig) {
         return EmailAccount(
             address = "$username@$domain",
             password = password,
-            provider = EmailProvider.SELFHOSTED,
+            provider = EmailProvider.SELF_HOSTED,
             createdAt = kotlinx.datetime.Clock.System.now().toString(),
             verified = false
         )

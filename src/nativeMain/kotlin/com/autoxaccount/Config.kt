@@ -325,9 +325,9 @@ data class EmailProviderSettings(
     val productionDomains: List<String> = listOf("example.com"),
     val selectedProvider: String = "MailTm",
     val customSmtpHost: String? = null,
-    val customSmtpPort: UShort? = null,
+    val customSmtpPort: Int? = null,  // Changed from UShort to Int
     val customImapHost: String? = null,
-    val customImapPort: UShort? = null,
+    val customImapPort: Int? = null,  // Changed from UShort to Int
     val customUsername: String? = null,
     val customPassword: String? = null,
     val customApiKey: String? = null,

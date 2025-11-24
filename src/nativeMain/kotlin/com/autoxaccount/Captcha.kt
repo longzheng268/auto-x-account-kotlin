@@ -30,10 +30,11 @@ data class CaptchaData(
  * Captcha type
  */
 enum class CaptchaType {
-    IMAGE,      // Image-based captcha
-    RECAPTCHA,  // Google reCAPTCHA
-    HCAPTCHA,   // hCaptcha
-    FUNCAPTCHA  // FunCaptcha (Arkose Labs)
+    NUMBER_IMAGE_MATCH,  // X's number-image matching (left: handwritten number, right: select matching image)
+    IMAGE,               // Generic image-based captcha
+    RECAPTCHA,           // Google reCAPTCHA (deprecated, X no longer uses)
+    HCAPTCHA,            // hCaptcha
+    FUNCAPTCHA           // FunCaptcha / Arkose Labs (deprecated, X no longer uses)
 }
 
 /**

@@ -308,15 +308,23 @@ class BitBrowserProfileManager(
      * Detect current OS
      */
     private fun detectOs(): String {
-        val osName = platform.posix.getenv("OS")?.toKString() ?: ""
-        return when {
-            osName.contains("Windows", ignoreCase = true) -> "windows"
-            else -> {
-                val uname = platform.posix.getenv("OSTYPE")?.toKString() ?: ""
-                when {
-                    uname.contains("darwin", ignoreCase = true) -> "macos"
-                    else -> "linux"
-                }
+        return detectOperatingSystem()
+    }
+}
+
+/**
+ * Utility function to detect operating system
+ * 检测操作系统的工具函数
+ */
+private fun detectOperatingSystem(): String {
+    val osName = platform.posix.getenv("OS")?.toKString() ?: ""
+    return when {
+        osName.contains("Windows", ignoreCase = true) -> "windows"
+        else -> {
+            val uname = platform.posix.getenv("OSTYPE")?.toKString() ?: ""
+            when {
+                uname.contains("darwin", ignoreCase = true) -> "macos"
+                else -> "linux"
             }
         }
     }
