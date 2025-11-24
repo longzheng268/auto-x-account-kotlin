@@ -208,7 +208,73 @@ suspend fun runBatchRegistration(
 ) {
     logInfo("${i18n.t("batch_registration_start")}: $count 个账号，并发数: $concurrent")
     
-    println("注意 / Note: 批量注册功能正在开发中 / Batch registration is under development")
+    // Create dummy email handler for now
+    val emailHandler = object : EmailHandler {
+        override suspend fun checkForVerificationCode(email: String): String? {
+            // Simulate verification code
+            delay(5000)
+            return "123456"
+        }
+
+        override suspend fun getEmails(email: String): List<EmailMessage> {
+            return emptyList()
+        }
+    }
+    
+    // Create email provider config
+    val emailProviderConfig = EmailProviderConfig(
+        provider = EmailProvider.MAIL_TM,
+        domain = config.smtp.domain
+    )
+    
+    // Create batch email manager
+    val emailManager = BatchEmailManager(emailProviderConfig)
+    
+    // Create batch registration manager
+    val batchManager = BatchRegistrationManager(config, emailHandler, emailManager)
+    
+    // Load cached data
+    batchManager.loadFromCache().onFailure { error ->
+        logWarn("加载缓存数据失败 / Failed to load cache: ${error.message}")
+    }
+    
+    // Start batch registration
+    val taskId = batchManager.startBatchRegistration(count, concurrent, useExistingEmails).getOrElse {
+        logError("启动批量注册失败 / Failed to start batch registration: ${it.message}")
+        return
+    }
+    
+    logInfo("批量注册任务已启动 / Batch registration task started: $taskId")
+    
+    // Wait and monitor progress
+    while (true) {
+        delay(5000)
+        
+        val stats = batchManager.getTaskStats(taskId)
+        if (stats != null) {
+            logInfo(
+                "进度 / Progress: ${String.format("%.1f", stats.progress)}% " +
+                "(${stats.completed + stats.failed}/$count) - " +
+                "成功 / Success: ${stats.completed}, 失败 / Failed: ${stats.failed}"
+            )
+            
+            if (stats.status == BatchStatus.COMPLETED) {
+                logInfo("批量注册任务完成 / Batch registration task completed!")
+                break
+            } else if (stats.status == BatchStatus.FAILED) {
+                logError("批量注册任务失败 / Batch registration task failed!")
+                break
+            }
+        }
+    }
+    
+    // Export accounts
+    logInfo("导出账号信息 / Exporting account information...")
+    batchManager.exportAccounts("batch_accounts.json", ExportFormat.JSON).onSuccess {
+        logInfo("账号已导出到 / Accounts exported to: batch_accounts.json")
+    }.onFailure {
+        logError("导出失败 / Export failed: ${it.message}")
+    }
 }
 
 /**
@@ -223,28 +289,190 @@ suspend fun runCreateEmails(
 ) {
     logInfo("${i18n.t("email_creating")}: $count 个邮箱")
     
-    println("注意 / Note: 邮箱创建功能正在开发中 / Email creation is under development")
+    // Create email provider config
+    val emailProviderConfig = EmailProviderConfig(
+        provider = EmailProvider.MAIL_TM,
+        domain = config.smtp.domain
+    )
+    
+    // Create batch email manager
+    val emailManager = BatchEmailManager(emailProviderConfig)
+    
+    // Create emails
+    logInfo("开始创建邮箱 / Starting email creation...")
+    emailManager.createBatch(count, verify)
+    
+    val emails = emailManager.getAllEmails()
+    logInfo("成功创建 / Successfully created: ${emails.size} 个邮箱")
+    
+    // Export to file or print
+    if (output != null) {
+        val exportFormat = when {
+            output.endsWith(".csv") -> ExportFormat.CSV
+            output.endsWith(".txt") -> ExportFormat.TXT
+            else -> ExportFormat.JSON
+        }
+        
+        emailManager.export(output, exportFormat).onSuccess {
+            logInfo("已导出到文件 / Exported to file: $output")
+        }.onFailure {
+            logError("导出失败 / Export failed: ${it.message}")
+        }
+    } else {
+        // Print to console
+        println("\n创建的邮箱列表 / Created email list:")
+        emails.forEach { email ->
+            println("  - ${email.address} (密码/Password: ${email.password})")
+        }
+    }
 }
 
 /**
  * Run export accounts
  */
 suspend fun runExportAccounts(output: String, format: String, i18n: I18n) {
-    logInfo("导出账号到文件: $output")
+    logInfo("导出账号到文件 / Exporting accounts to file: $output")
     
     val accountsPath = DataDir.getAccountsPath()
     
-    println("从 $accountsPath 导出到 $output ($format 格式)")
-    println("注意 / Note: 导出功能正在开发中 / Export functionality is under development")
+    // Check if accounts file exists
+    if (!fileExists(accountsPath)) {
+        logWarn("账号文件不存在 / Accounts file does not exist: $accountsPath")
+        println("没有账号数据可导出 / No account data to export")
+        return
+    }
+    
+    // Read accounts
+    val content = try {
+        readFileContent(accountsPath)
+    } catch (e: Exception) {
+        logError("读取账号文件失败 / Failed to read accounts file: ${e.message}")
+        return
+    }
+    
+    val accounts = try {
+        Json.decodeFromString<List<AccountInfo>>(content)
+    } catch (e: Exception) {
+        logError("解析账号数据失败 / Failed to parse account data: ${e.message}")
+        return
+    }
+    
+    if (accounts.isEmpty()) {
+        logInfo("没有账号数据可导出 / No account data to export")
+        return
+    }
+    
+    // Convert to export format
+    val exportData = accounts.map { acc ->
+        AccountData(
+            username = acc.username,
+            email = acc.email,
+            password = acc.password,
+            phone = acc.phone,
+            createdAt = acc.createdAt,
+            status = acc.status
+        )
+    }
+    
+    // Determine export format
+    val exportFormat = when (format.lowercase()) {
+        "csv" -> ExportFormat.CSV
+        "xlsx" -> ExportFormat.XLSX
+        "txt" -> ExportFormat.TXT
+        else -> ExportFormat.JSON
+    }
+    
+    // Export accounts
+    val result = exportAccounts(exportData, output, exportFormat)
+    
+    result.onSuccess {
+        logInfo("成功导出 / Successfully exported: ${accounts.size} 个账号到 / accounts to: $output")
+        println("✅ 导出完成 / Export completed: $output")
+    }.onFailure { error ->
+        logError("导出失败 / Export failed: ${error.message}")
+        println("❌ 导出失败 / Export failed: ${error.message}")
+    }
 }
 
 /**
  * Run import accounts
  */
 suspend fun runImportAccounts(input: String, i18n: I18n) {
-    logInfo("从文件导入账号: $input")
+    logInfo("从文件导入账号 / Importing accounts from file: $input")
     
-    println("注意 / Note: 导入功能正在开发中 / Import functionality is under development")
+    // Check if file exists
+    if (!fileExists(input)) {
+        logError("文件不存在 / File does not exist: $input")
+        println("❌ 文件不存在 / File not found: $input")
+        return
+    }
+    
+    // Import accounts
+    val result = importAccounts(input)
+    
+    result.onSuccess { imported ->
+        if (imported.isEmpty()) {
+            logWarn("导入的文件中没有账号数据 / No account data in imported file")
+            println("⚠️  文件中没有账号数据 / No accounts found in file")
+            return
+        }
+        
+        logInfo("成功导入 / Successfully imported: ${imported.size} 个账号")
+        
+        // Display imported accounts
+        println("\n导入的账号列表 / Imported accounts list:")
+        imported.forEachIndexed { idx, account ->
+            println(
+                "  ${idx + 1}. ${account.username} (${account.email}) - " +
+                "状态/Status: ${account.status ?: "未知/Unknown"}"
+            )
+        }
+        
+        // Save to local database
+        val accountsPath = DataDir.getAccountsPath()
+        val existingAccounts = if (fileExists(accountsPath)) {
+            try {
+                val content = readFileContent(accountsPath)
+                Json.decodeFromString<List<AccountInfo>>(content).toMutableList()
+            } catch (e: Exception) {
+                logWarn("读取现有账号失败，创建新列表 / Failed to read existing accounts, creating new list")
+                mutableListOf()
+            }
+        } else {
+            mutableListOf()
+        }
+        
+        // Convert and append imported accounts
+        imported.forEach { account ->
+            existingAccounts.add(AccountInfo(
+                email = account.email,
+                name = account.username,
+                username = account.username,
+                password = account.password ?: "",
+                phone = account.phone,
+                birthDate = BirthDate(
+                    month = "01",
+                    day = "01",
+                    year = "1990"
+                ),
+                createdAt = account.createdAt ?: Clock.System.now().toString(),
+                status = account.status ?: "imported"
+            ))
+        }
+        
+        // Save to file
+        val json = Json { prettyPrint = true }
+        val content = json.encodeToString(existingAccounts)
+        writeFileContent(accountsPath, content)
+        
+        logInfo("账号已保存到本地数据库 / Accounts saved to local database")
+        println("✅ 导入完成，共 / Import completed, total: ${imported.size} 个账号")
+        println("📁 保存位置 / Saved to: $accountsPath")
+        
+    }.onFailure { error ->
+        logError("导入失败 / Import failed: ${error.message}")
+        println("❌ 导入失败 / Import failed: ${error.message}")
+    }
 }
 
 /**
@@ -257,7 +485,47 @@ suspend fun runBrowserDetection(config: Config, verbose: Boolean, i18n: I18n) {
     println("  浏览器环境检测报告 / Browser Environment Report")
     println("═══════════════════════════════════════════════")
     println()
-    println("注意 / Note: 浏览器检测功能正在开发中 / Browser detection is under development")
+    
+    // Create browser detector
+    val detector = BrowserDetector(verbose)
+    
+    // Perform detection
+    val result = detector.detectEnvironment()
+    
+    result.onSuccess { report ->
+        // Display results
+        println("📊 总体评估 / Overall Assessment:")
+        println("  风险等级 / Risk Level: ${report.riskLevel}")
+        println("  风险评分 / Risk Score: ${report.riskScore}/100")
+        println()
+        
+        println("📋 检测详情 / Detection Details:")
+        report.checks.forEach { check ->
+            val status = if (check.passed) "✅" else "❌"
+            println("  $status ${check.name} (权重/Weight: ${check.weight})")
+            if (verbose || !check.passed) {
+                println("     ${check.details}")
+            }
+        }
+        println()
+        
+        if (report.recommendations.isNotEmpty()) {
+            println("💡 优化建议 / Recommendations:")
+            report.recommendations.forEachIndexed { index, rec ->
+                println("  ${index + 1}. $rec")
+            }
+            println()
+        }
+        
+        println("🕐 检测时间 / Timestamp: ${report.timestamp}")
+        println("═══════════════════════════════════════════════\n")
+        
+        logInfo("✅ 检测完成 / Detection completed")
+        
+    }.onFailure { error ->
+        logError("❌ 检测失败 / Detection failed: ${error.message}")
+        println("❌ 检测失败 / Detection failed: ${error.message}")
+    }
 }
 
 /**
