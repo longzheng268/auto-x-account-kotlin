@@ -1,0 +1,58 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Configuration
+config.json
+.env
+
+# Logs
+*.log
+logs/
+
+# Browser data
+browser_data/
+screenshots/
+cookies/
+
+# Output
+dist/
+release/
+accounts.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Fonts - exclude font files but keep README and fallback
+fonts/*
+!fonts/README.md
+!fonts/.gitkeep
+!fonts/fallback.ttf
+
+
+# Added by cargo
+/target
+
+# Kotlin/Native and Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+*.kotlin_module
+*.kotlin_metadata
+
+# Kotlin/Native compiled binaries
+*.kexe
+*.exe
+*.dll
+*.so
+*.dylib
