@@ -162,6 +162,74 @@ data class Config(
      */
     fun isProduction(): Boolean = 
         mode == RunMode.PRODUCTION || emailProvider.forceSelfHosted
+
+    /**
+     * Get email provider configuration based on selected provider
+     * 根据选择的提供商获取邮箱提供商配置
+     */
+    fun getEmailProviderConfig(): EmailProviderConfig {
+        val provider = EmailProvider.fromString(emailProvider.selectedProvider)
+        
+        return when (provider) {
+            EmailProvider.CUSTOM -> {
+                EmailProviderConfig(
+                    provider = EmailProvider.CUSTOM,
+                    smtpHost = emailProvider.customSmtpHost,
+                    smtpPort = emailProvider.customSmtpPort?.toInt(),
+                    imapHost = emailProvider.customImapHost,
+                    imapPort = emailProvider.customImapPort?.toInt(),
+                    username = emailProvider.customUsername,
+                    password = emailProvider.customPassword,
+                    domain = smtp.domain,
+                    apiKey = emailProvider.customApiKey,
+                    apiEndpoint = emailProvider.customApiEndpoint
+                )
+            }
+            EmailProvider.SELF_HOSTED -> {
+                EmailProviderConfig(
+                    provider = EmailProvider.SELF_HOSTED,
+                    smtpHost = smtp.host,
+                    smtpPort = smtp.port.toInt(),
+                    domain = smtp.domain
+                )
+            }
+            EmailProvider.MAILINATOR -> {
+                EmailProviderConfig(
+                    provider = EmailProvider.MAILINATOR,
+                    apiKey = emailProvider.customApiKey,
+                    domain = smtp.domain
+                )
+            }
+            else -> {
+                // For MailTm, GuerrillaMail, TempMail, etc.
+                EmailProviderConfig(
+                    provider = provider,
+                    domain = smtp.domain
+                )
+            }
+        }
+    }
+
+    /**
+     * Get available email providers based on mode
+     * 根据模式获取可用的邮箱提供商
+     */
+    fun getAvailableProviders(): List<String> {
+        return if (isProduction()) {
+            listOf("SelfHosted", "Custom")
+        } else {
+            listOf(
+                "MailTm",
+                "GuerrillaMail", 
+                "TempMail",
+                "10MinuteMail",
+                "DropMail",
+                "Mailinator",
+                "SelfHosted",
+                "Custom"
+            )
+        }
+    }
 }
 
 @Serializable

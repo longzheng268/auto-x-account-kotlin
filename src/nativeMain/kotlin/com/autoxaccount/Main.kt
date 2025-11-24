@@ -485,7 +485,47 @@ suspend fun runBrowserDetection(config: Config, verbose: Boolean, i18n: I18n) {
     println("  浏览器环境检测报告 / Browser Environment Report")
     println("═══════════════════════════════════════════════")
     println()
-    println("注意 / Note: 浏览器检测功能正在开发中 / Browser detection is under development")
+    
+    // Create browser detector
+    val detector = BrowserDetector(verbose)
+    
+    // Perform detection
+    val result = detector.detectEnvironment()
+    
+    result.onSuccess { report ->
+        // Display results
+        println("📊 总体评估 / Overall Assessment:")
+        println("  风险等级 / Risk Level: ${report.riskLevel}")
+        println("  风险评分 / Risk Score: ${report.riskScore}/100")
+        println()
+        
+        println("📋 检测详情 / Detection Details:")
+        report.checks.forEach { check ->
+            val status = if (check.passed) "✅" else "❌"
+            println("  $status ${check.name} (权重/Weight: ${check.weight})")
+            if (verbose || !check.passed) {
+                println("     ${check.details}")
+            }
+        }
+        println()
+        
+        if (report.recommendations.isNotEmpty()) {
+            println("💡 优化建议 / Recommendations:")
+            report.recommendations.forEachIndexed { index, rec ->
+                println("  ${index + 1}. $rec")
+            }
+            println()
+        }
+        
+        println("🕐 检测时间 / Timestamp: ${report.timestamp}")
+        println("═══════════════════════════════════════════════\n")
+        
+        logInfo("✅ 检测完成 / Detection completed")
+        
+    }.onFailure { error ->
+        logError("❌ 检测失败 / Detection failed: ${error.message}")
+        println("❌ 检测失败 / Detection failed: ${error.message}")
+    }
 }
 
 /**
