@@ -101,6 +101,38 @@ data class BitBrowserConfig(
 )
 
 /**
+ * 全局配置数据类
+ */
+@Serializable
+data class AppConfig(
+    // 验证码配置
+    val captchaMode: String = "AUTO",                 // 验证码模式
+    val captchaTimeout: Long = 300000,                // 验证码超时（毫秒）
+
+    // 邮箱配置
+    val emailConfig: EmailConfig = EmailConfig(),
+
+    // 代理配置
+    val proxyConfig: ProxyConfig = ProxyConfig(),
+
+    // BitBrowser 配置
+    val bitBrowserConfig: BitBrowserConfig = BitBrowserConfig(),
+
+    // 网络配置
+    val requestTimeout: Long = 30000,                 // 请求超时（毫秒）
+    val retryCount: Int = 3,                          // 重试次数
+    val retryDelay: Long = 1000,                      // 重试延迟（毫秒）
+
+    // 批量操作配置
+    val maxConcurrency: Int = 5,                      // 最大并发数
+    val taskCheckInterval: Long = 1000,               // 任务检查间隔（毫秒）
+
+    // 其他配置
+    val userAgent: String = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    val debugMode: Boolean = false                    // 调试模式
+)
+
+/**
  * 获取应用程序配置目录
  * 遵循各操作系统的软件数据存储规范
  */

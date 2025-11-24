@@ -12,8 +12,6 @@ import java.net.URI
 
 private val logger = LoggerFactory.getLogger("ProxyManager")
 
-private val logger = LoggerFactory.getLogger("ProxyManager")
-
 /**
  * 代理信息数据类
  */

@@ -72,7 +72,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         jvmTarget = "20"
         freeCompilerArgs = listOf(
             "-Xjsr305=strict",
-            "-Xopt-in=kotlin.RequiresOptIn"
+            "-opt-in=kotlin.RequiresOptIn"
         )
     }
 }
