@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-
 plugins {
     kotlin("multiplatform") version "1.9.21"
     kotlin("plugin.serialization") version "1.9.21"
@@ -43,14 +41,12 @@ kotlin {
                 )
                 
                 // Link with pthread for coroutines support
-                if (this@apply is KotlinNativeTarget) {
-                    when (konanTarget.family) {
-                        org.jetbrains.kotlin.konan.target.Family.LINUX,
-                        org.jetbrains.kotlin.konan.target.Family.OSX -> {
-                            linkerOpts("-lpthread")
-                        }
-                        else -> {}
+                when (konanTarget.family) {
+                    org.jetbrains.kotlin.konan.target.Family.LINUX,
+                    org.jetbrains.kotlin.konan.target.Family.OSX -> {
+                        linkerOpts("-lpthread")
                     }
+                    else -> {}
                 }
             }
         }
@@ -75,15 +71,6 @@ kotlin {
             dependencies {
                 // Platform-specific dependencies
             }
-        }
-    }
-}
-
-tasks {
-    // Clean task
-    register("clean") {
-        doLast {
-            delete(layout.buildDirectory)
         }
     }
 }
